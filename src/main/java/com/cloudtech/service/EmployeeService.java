@@ -7,6 +7,8 @@ import com.cloudtech.model.EmployeeAddResponse;
 import com.cloudtech.model.EmployeeShowResponse;
 import com.cloudtech.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -15,8 +17,8 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 import java.util.List;
 
 
-
-
+@Log
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class EmployeeService {
@@ -32,18 +34,34 @@ public class EmployeeService {
     //add employee.........
 
     public EmployeeAddResponse addEmployee(EmployeeAddRequest request) {
-        Employee employee = new Employee();
-        employee.setName(request.getName());
-        employee.setDepartment(request.getDepartment());
-        employee.setSalary(request.getSalary());
 
-        Employee storedEmployee = repository.save(employee);
-        return new EmployeeAddResponse(
-                storedEmployee.getId(),
-                employee.getName(),
-                employee.getDepartment(),
-                employee.getSalary()
-        );
+        try{
+
+
+
+            Employee employee = new Employee();
+            employee.setName(request.getName());
+            employee.setDepartment(request.getDepartment());
+            employee.setSalary(request.getSalary());
+
+            Employee storedEmployee = repository.save(employee);
+
+
+            log.info("Employee added successfully with id: " + storedEmployee.getId());
+            return new EmployeeAddResponse(
+                    employee.getId(),
+                    employee.getName(),
+                    employee.getDepartment(),
+                    employee.getSalary()
+            );
+
+
+        }catch (Exception e){
+            log.severe("Error occurred while adding employee: " + e.getMessage());
+            throw new RuntimeException("Failed to add employee", e);
+        }
+
+
     }
 
 
@@ -52,21 +70,36 @@ public class EmployeeService {
 
     @SuppressWarnings("unused")
     public EmployeeShowResponse updateEmployee(Long id, EmployeeAddRequest request) {
-        Employee employee = repository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Employee not found with id: " + id));
 
-        employee.setName(request.getName());
-        employee.setDepartment(request.getDepartment());
-        employee.setSalary(request.getSalary());
-        repository.save(employee);
+        try{
+
+            Employee employee = repository.findById(id)
+                    .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Employee not found with id: " + id));
+
+            employee.setName(request.getName());
+            employee.setDepartment(request.getDepartment());
+            employee.setSalary(request.getSalary());
+            repository.save(employee);
 
 
-        return new EmployeeShowResponse(
-                employee.getId(),
-                employee.getName(),
-                employee.getDepartment(),
-                employee.getSalary()
-        );
+            log.info("Employee updated successfully with id: " + id);
+
+
+            return new EmployeeShowResponse(
+                    employee.getId(),
+                    employee.getName(),
+                    employee.getDepartment(),
+                    employee.getSalary()
+            );
+
+        }catch (ResponseStatusException e){
+            log.warning("Employee not found with id: " + id);
+            throw e;
+        }catch (Exception e){
+            log.severe("Error occurred while updating employee with id: " + id + ". Error: " + e.getMessage());
+            throw new RuntimeException("Failed to update employee with id: " + id, e);
+        }
+
     }
 
 
@@ -76,14 +109,24 @@ public class EmployeeService {
 
     public void deleteEmployee(Long id) {
 
-        repository.existsById(id);
+        try{
+            repository.existsById(id);
 
 
-        if (!repository.existsById(id)) {
-            throw new ResponseStatusException(NOT_FOUND, "Employee not found with id: " + id);
+            if (!repository.existsById(id)) {
+                throw new ResponseStatusException(NOT_FOUND, "Employee not found with id: " + id);
+            }
+
+            repository.deleteById(id);
+
+            log.info("Employee deleted successfully with id: " + id);
+        }catch (ResponseStatusException e){
+            log.warning("Employee not found with id: " + id);
+            throw e;
+        }catch (Exception e){
+            log.severe("Error occurred while deleting employee with id: " + id + ". Error: " + e.getMessage());
+            throw new RuntimeException("Failed to delete employee with id: " + id, e);
         }
-
-        repository.deleteById(id);
     }
 
 
@@ -94,14 +137,22 @@ public class EmployeeService {
 
     public List<EmployeeShowResponse> showEmployees() {
 
-        List<EmployeeShowResponse> var2 = repository.findAll().stream()
-                .map(employee -> new EmployeeShowResponse(
-                        employee.getId(),
-                        employee.getName(),
-                        employee.getDepartment(),
-                        employee.getSalary()
-                ))
-                .toList();
-        return var2;
+        try{
+            List<EmployeeShowResponse> var2 = repository.findAll().stream()
+                    .map(employee -> new EmployeeShowResponse(
+                            employee.getId(),
+                            employee.getName(),
+                            employee.getDepartment(),
+                            employee.getSalary()
+                    ))
+                    .toList();
+
+
+            log.info("Fetched " + var2.size() + " employees successfully");
+            return var2;
+        }catch (Exception e){
+            log.severe("Error occurred while fetching employees: " + e.getMessage());
+            throw new RuntimeException("Failed to fetch employees", e);
+        }
     }
 }

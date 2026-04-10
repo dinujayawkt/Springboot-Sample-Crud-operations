@@ -6,10 +6,17 @@ import com.cloudtech.model.EmployeeAddResponse;
 import com.cloudtech.model.EmployeeShowResponse;
 import com.cloudtech.service.EmployeeService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+
+
+
+@Log
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/employee")
@@ -25,6 +32,9 @@ public class EmployeeController {
     @GetMapping("/show")
     public List<EmployeeShowResponse> showEmployees() {
 
+
+
+        log.info("showEmployees method called in EmployeeController");
         List<EmployeeShowResponse> var1 = service.showEmployees();
         
         
@@ -36,8 +46,10 @@ public class EmployeeController {
     @PostMapping("/add")
     public EmployeeAddResponse addEmployee(@RequestBody EmployeeAddRequest data) {
 
-
+        log.info("addEmployee method called in EmployeeController with data: " + data);
         EmployeeAddResponse var2 = service.addEmployee(data);
+
+
 
         return var2;
 
@@ -49,6 +61,7 @@ public class EmployeeController {
     @PutMapping("/update/{id}")
     public EmployeeShowResponse updateEmployee(@PathVariable Long id, @RequestBody EmployeeAddRequest data) {
 
+        log.info("updateEmployee method called in EmployeeController with id: " + id + " and data: " + data);
         EmployeeShowResponse var3 = service.updateEmployee(id, data);
         return var3;
     }
